@@ -1,0 +1,115 @@
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'lcn_school',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  multipleStatements: true
+});
+
+async function initializeDatabase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS gallery (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(150) NOT NULL,
+      image_url VARCHAR(255) NOT NULL,
+      category VARCHAR(100) DEFAULT NULL,
+      description TEXT DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS events (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(150) NOT NULL,
+      description TEXT DEFAULT NULL,
+      event_date DATE NOT NULL,
+      event_time VARCHAR(50) DEFAULT NULL,
+      location VARCHAR(150) DEFAULT NULL,
+      image_url VARCHAR(255) DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(150) NOT NULL,
+      content TEXT NOT NULL,
+      posted_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS news (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(150) NOT NULL,
+      content TEXT NOT NULL,
+      image_url VARCHAR(255) DEFAULT NULL,
+      posted_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      email VARCHAR(120) NOT NULL,
+      phone VARCHAR(50) DEFAULT NULL,
+      subject VARCHAR(150) DEFAULT NULL,
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS applications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      student_name VARCHAR(150) NOT NULL,
+      dob DATE NOT NULL,
+      gender VARCHAR(20) NOT NULL,
+      class_applying VARCHAR(50) NOT NULL,
+      parent_name VARCHAR(150) NOT NULL,
+      parent_phone VARCHAR(50) NOT NULL,
+      parent_email VARCHAR(120) DEFAULT NULL,
+      address TEXT NOT NULL,
+      previous_school VARCHAR(150) DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
+async function addColumnIfMissing(tableName, columnName, columnDefinition) {
+  const [rows] = await pool.query(
+    `
+    SELECT COUNT(*) AS count
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = ?
+      AND TABLE_NAME = ?
+      AND COLUMN_NAME = ?
+    `,
+    [process.env.DB_NAME || 'lcn_school', tableName, columnName]
+  );
+
+  if (rows[0].count === 0) {
+    await pool.query(
+      `ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${columnDefinition}`
+    );
+  }
+}
+
+async function migrateDatabase() {
+  await addColumnIfMissing('contact_messages', 'phone', 'VARCHAR(50) DEFAULT NULL AFTER email');
+  await addColumnIfMissing('events', 'image_url', 'VARCHAR(255) DEFAULT NULL');
+  await addColumnIfMissing('news', 'image_url', 'VARCHAR(255) DEFAULT NULL');
+  await addColumnIfMissing('gallery', 'category', 'VARCHAR(100) DEFAULT NULL');
+  await addColumnIfMissing('gallery', 'description', 'TEXT DEFAULT NULL');
+}
+
+module.exports = {
+  query: (...args) => pool.query(...args),
+  execute: (...args) => pool.execute(...args),
+  getConnection: () => pool.getConnection(),
+  initializeDatabase: async () => {
+    await initializeDatabase();
+    await migrateDatabase();
+  }
+};

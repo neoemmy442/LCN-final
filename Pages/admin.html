@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>London College Nansana - Admin Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="../images/logo.png" rel="icon" type="image/png"/>
+<link href="../style.css" rel="stylesheet"/>
+<script defer="" src="../admin.js"></script>
+</head>
+<body>
+<header>
+<div class="header-content">
+<div class="logo">
+<img alt="LCN Logo" src="../images/logo.png"/>
+<span class="brand-text">London College Nansana</span>
+</div>
+<nav class="navbar">
+<ul>
+<li><a href="index.html">Website Home</a></li>
+<li><a href="news.html#gallery">Gallery</a></li>
+<li><a href="news.html#events">Events</a></li>
+<li><a href="contact.html#contact">Messages</a></li>
+</ul>
+</nav>
+</div>
+</header>
+<main class="admin-page">
+<section class="content-section active admin-shell" id="admin-dashboard">
+<div class="section-header">
+<h2>Admin Dashboard</h2>
+<p>Manage gallery, events, news, announcements, messages, and applications</p>
+</div>
+<div class="section-content">
+<div class="admin-auth card">
+<h3><i class="fas fa-lock"></i> Admin Access</h3>
+<p>Enter your admin API key to manage website content.</p>
+<div class="admin-auth-row">
+<input id="admin-api-key" placeholder="Enter admin API key" type="password"/>
+<button class="btn btn-primary" id="save-api-key-btn">Save Key</button>
+<button class="btn btn-secondary" id="clear-api-key-btn" type="button">Clear</button>
+</div>
+<p id="admin-auth-status"></p>
+</div>
+<div class="admin-grid">
+<div class="card admin-form-card">
+<h3>Upload Gallery Image</h3>
+<form id="gallery-admin-form">
+<div class="form-group"><label>Title</label><input name="title" required="" type="text"/></div>
+<div class="form-group"><label>Category</label><input name="category" type="text"/></div>
+<div class="form-group"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+<div class="form-group"><label>Upload Image</label><input accept="image/*" name="image" required="" type="file"/></div>
+<button class="btn btn-primary" type="submit">Add Gallery Item</button>
+<p class="admin-form-status"></p>
+</form>
+</div>
+<div class="card admin-form-card">
+<h3>Add Event</h3>
+<form id="event-admin-form">
+<div class="form-group"><label>Title</label><input name="title" required="" type="text"/></div>
+<div class="form-group"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+<div class="form-group"><label>Date</label><input name="event_date" required="" type="date"/></div>
+<div class="form-group"><label>Time</label><input name="event_time" placeholder="9:00 AM" type="text"/></div>
+<div class="form-group"><label>Location</label><input name="location" type="text"/></div>
+<div class="form-group"><label>Event Image</label><input accept="image/*" name="image" type="file"/></div>
+<button class="btn btn-primary" type="submit">Add Event</button>
+<p class="admin-form-status"></p>
+</form>
+</div>
+<div class="card admin-form-card">
+<h3>Add News</h3>
+<form id="news-admin-form">
+<div class="form-group"><label>Title</label><input name="title" required="" type="text"/></div>
+<div class="form-group"><label>Date</label><input name="posted_date" required="" type="date"/></div>
+<div class="form-group"><label>Content</label><textarea name="content" required="" rows="4"></textarea></div>
+<div class="form-group"><label>News Image</label><input accept="image/*" name="image" type="file"/></div>
+<button class="btn btn-primary" type="submit">Add News</button>
+<p class="admin-form-status"></p>
+</form>
+</div>
+<div class="card admin-form-card">
+<h3>Add Announcement</h3>
+<form id="announcement-admin-form">
+<div class="form-group"><label>Title</label><input name="title" required="" type="text"/></div>
+<div class="form-group"><label>Date</label><input name="posted_date" required="" type="date"/></div>
+<div class="form-group"><label>Content</label><textarea name="content" required="" rows="4"></textarea></div>
+<button class="btn btn-primary" type="submit">Add Announcement</button>
+<p class="admin-form-status"></p>
+</form>
+</div>
+</div>
+<div class="admin-lists">
+<div class="card admin-list-card">
+<div class="admin-list-header"><h3>Gallery Items</h3><button class="btn btn-secondary refresh-btn" data-target="gallery">Refresh</button></div>
+<div class="admin-list" id="admin-gallery-list"></div>
+</div>
+<div class="card admin-list-card">
+<div class="admin-list-header"><h3>Events</h3><button class="btn btn-secondary refresh-btn" data-target="events">Refresh</button></div>
+<div class="admin-list" id="admin-events-list"></div>
+</div>
+<div class="card admin-list-card">
+<div class="admin-list-header"><h3>News</h3><button class="btn btn-secondary refresh-btn" data-target="news">Refresh</button></div>
+<div class="admin-list" id="admin-news-list"></div>
+</div>
+<div class="card admin-list-card">
+<div class="admin-list-header"><h3>Announcements</h3><button class="btn btn-secondary refresh-btn" data-target="announcements">Refresh</button></div>
+<div class="admin-list" id="admin-announcements-list"></div>
+</div>
+<div class="card admin-list-card admin-wide-card">
+<div class="admin-list-header"><h3>Contact Messages</h3><button class="btn btn-secondary refresh-btn" data-target="messages">Refresh</button></div>
+<div class="admin-list" id="admin-messages-list"></div>
+</div>
+<div class="card admin-list-card admin-wide-card">
+<div class="admin-list-header"><h3>Applications</h3><button class="btn btn-secondary refresh-btn" data-target="applications">Refresh</button></div>
+<div class="admin-list" id="admin-applications-list"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body>
+</html>
