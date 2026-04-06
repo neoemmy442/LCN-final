@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'change-this-to-a-secure-key';
 const frontendDir = path.join(__dirname, '..');
-const uploadsDir = path.join(frontendDir, 'uploads');
+const uploadsDir = process.env.UPLOADS_DIR || path.join(frontendDir, 'uploads');
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
