@@ -16,16 +16,16 @@ const uploadsDir = process.env.UPLOADS_DIR || path.join(frontendDir, 'uploads');
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    cb(null, `${Date.now()}-${safeName}`);
-  }
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (/^image\//.test(file.mimetype)) cb(null, true);
@@ -54,10 +54,16 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function imageUrlFromRequest(req) {
-  if (req.file) return `/uploads/${req.file.filename}`;
-  const raw = req.body.image_url || req.body.imageUrl || '';
-  return raw.trim() || null;
+async function uploadToCloudinary(fileBuffer) {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: 'lcn-school' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    ).end(fileBuffer);
+  });
 }
 
 app.get('/api/health', async (_req, res) => {
@@ -198,23 +204,28 @@ app.get('/api/admin/applications', requireAdminKey, async (_req, res) => {
 });
 
 app.post('/api/admin/gallery', requireAdminKey, upload.single('image'), async (req, res) => {
-  try {
-    const { title, category = '', description = '' } = req.body;
-    const image_url = imageUrlFromRequest(req);
+try {
+  const { title, category = '', description = '' } = req.body;
 
-    if (!title || !image_url) {
-      return res.status(400).json({ message: 'Gallery title and image are required.' });
-    }
-
-    const [result] = await db.query(
-      'INSERT INTO gallery (title, image_url, category, description) VALUES (?, ?, ?, ?)',
-      [title, image_url, category, description]
-    );
-
-    res.status(201).json({ message: 'Gallery item added successfully.', id: result.insertId, image_url });
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to add gallery item.' });
+  if (!title || !req.file) {
+    return res.status(400).json({ message: 'Gallery title and image are required.' });
   }
+
+  const image_url = await uploadToCloudinary(req.file.buffer);
+
+  const [result] = await db.query(
+    'INSERT INTO gallery (title, image_url, category, description) VALUES (?, ?, ?, ?)',
+    [title, image_url, category, description]
+  );
+
+  res.status(201).json({
+    message: 'Gallery item added successfully.',
+    id: result.insertId,
+    image_url
+  });
+} catch (error) {
+  res.status(500).json({ message: error.message });
+}
 });
 
 app.delete('/api/admin/gallery/:id', requireAdminKey, async (req, res) => {
