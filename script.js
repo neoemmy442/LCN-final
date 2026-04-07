@@ -70,13 +70,59 @@ async function loadGallery() {
         if (!Array.isArray(items) || !items.length) return;
 
         carousel.innerHTML = items.map(item => `
-            <div class="slide">
+            <div class="slide" data-image-url="${item.image_url}" data-title="${item.title || ''}">
                 <img src="${item.image_url}" alt="${item.title || 'Gallery image'}">
             </div>
         `).join('');
+
+        attachGalleryPreview();
     } catch (error) {
         console.error('Gallery load error:', error);
     }
+}
+
+function attachGalleryPreview() {
+    const slides = document.querySelectorAll('.carousel .slide img');
+    const overlay = document.querySelector('.gallery-lightbox-overlay');
+    const overlayImage = document.querySelector('.gallery-lightbox-image');
+    const overlayCaption = document.querySelector('.gallery-lightbox-caption');
+    const overlayClose = document.querySelector('.gallery-lightbox-close');
+
+    if (!slides.length || !overlay || !overlayImage || !overlayCaption || !overlayClose) return;
+
+    const closePreview = () => {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        overlayImage.src = '';
+        overlayImage.alt = '';
+        overlayCaption.textContent = '';
+    };
+
+    const openPreview = (imageUrl, title, alt) => {
+        overlayImage.src = imageUrl;
+        overlayImage.alt = alt || title || 'Gallery preview';
+        overlayCaption.textContent = title || alt || 'Gallery image preview';
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+    };
+
+    slides.forEach(img => {
+        img.addEventListener('click', () => {
+            const slide = img.closest('.slide');
+            if (!slide) return;
+            openPreview(slide.dataset.imageUrl || img.src, slide.dataset.title || img.alt, img.alt);
+        });
+    });
+
+    overlayClose.addEventListener('click', closePreview);
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay) closePreview();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && overlay.classList.contains('open')) {
+            closePreview();
+        }
+    });
 }
 
 async function loadEvents() {
